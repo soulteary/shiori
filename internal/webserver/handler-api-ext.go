@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"log"
 	fp "path/filepath"
 	"strconv"
 
@@ -90,7 +91,7 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, 
 			}
 
 			if err != nil && isFatalErr {
-				fmt.Errorf("failed to process bookmark: %v", err)
+				log.Printf("failed to process bookmark: %v", err)
 				return
 			}
 		}
@@ -98,7 +99,7 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, 
 		// Save bookmark to database
 		results, err := h.DB.SaveBookmarks(book)
 		if err != nil || len(results) == 0 {
-			fmt.Errorf("failed to save bookmark: %v", err)
+			log.Printf("failed to save bookmark: %v", err)
 			return
 		}
 	}()

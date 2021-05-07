@@ -93,7 +93,7 @@ func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request, p
 	// Get bookmark in database
 	bookmark, exist := h.DB.GetBookmark(id, "")
 	if !exist {
-		panic(fmt.Errorf("Bookmark not found"))
+		panic(fmt.Errorf("bookmark not found"))
 	}
 
 	// If it's not public, make sure session still valid
@@ -235,7 +235,7 @@ func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request, p
 
 	bookmark, exist := h.DB.GetBookmark(id, "")
 	if !exist {
-		panic(fmt.Errorf("Bookmark not found"))
+		panic(fmt.Errorf("bookmark not found"))
 	}
 
 	// If it's not public, make sure session still valid

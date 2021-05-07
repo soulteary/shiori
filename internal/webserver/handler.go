@@ -46,7 +46,7 @@ func (h *handler) prepareSessionCache() {
 }
 
 func (h *handler) prepareArchiveCache() {
-	h.ArchiveCache.OnEvicted(func(key string, data interface{}) {
+	h.ArchiveCache.OnEvicted(func(_ string, data interface{}) {
 		archive := data.(*warc.Archive)
 		archive.Close()
 	})

@@ -79,7 +79,7 @@ func ServeApp(cfg Config) error {
 	router.DELETE(jp("/api/accounts"), hdl.apiDeleteAccount)
 
 	// Route for panic
-	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, arg interface{}) {
+	router.PanicHandler = func(w http.ResponseWriter, _ *http.Request, arg interface{}) {
 		http.Error(w, fmt.Sprint(arg), 500)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"log"
 	"path"
 	fp "path/filepath"
 	"strconv"
@@ -277,7 +278,7 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 			content.Close()
 
 			if err != nil && isFatalErr {
-				fmt.Errorf("failed to process bookmark: %v", err)
+				log.Printf("failed to process bookmark: %v", err)
 				return
 			}
 		}
@@ -290,7 +291,7 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 		// Save bookmark to database
 		results, err := h.DB.SaveBookmarks(book)
 		if err != nil || len(results) == 0 {
-			fmt.Errorf("failed to save bookmark: %v", err)
+			log.Printf("failed to save bookmark: %v", err)
 			return
 		}
 	}()
@@ -341,7 +342,7 @@ func (h *handler) apiUpdateBookmark(w http.ResponseWriter, r *http.Request, ps h
 
 	// Validate input
 	if request.Title == "" {
-		panic(fmt.Errorf("Title must not empty"))
+		panic(fmt.Errorf("title must not empty"))
 	}
 
 	// Get existing bookmark from database
@@ -687,10 +688,9 @@ func (h *handler) apiDeleteAccount(w http.ResponseWriter, r *http.Request, ps ht
 	checkError(err)
 
 	// Delete user's sessions
-	userSessions := []string{}
 	for _, username := range usernames {
 		if val, found := h.UserCache.Get(username); found {
-			userSessions = val.([]string)
+			userSessions := val.([]string)
 			for _, session := range userSessions {
 				h.SessionCache.Delete(session)
 			}
