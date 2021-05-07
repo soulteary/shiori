@@ -57,53 +57,55 @@ func (h *handler) apiInsertViaExtension(w http.ResponseWriter, r *http.Request, 
 		}
 	}
 
-	// Since we are using extension, the extension might send the HTML content
-	// so no need to download it again here. However, if it's empty, it might be not HTML file
-	// so we download it here.
-	var contentType string
-	var contentBuffer io.Reader
+	go func(){
+		// Since we are using extension, the extension might send the HTML content
+		// so no need to download it again here. However, if it's empty, it might be not HTML file
+		// so we download it here.
+		var contentType string
+		var contentBuffer io.Reader
 
-	if book.HTML == "" {
-		contentBuffer, contentType, _ = core.DownloadBookmark(book.URL)
-	} else {
-		contentType = "text/html; charset=UTF-8"
-		contentBuffer = bytes.NewBufferString(book.HTML)
-	}
-
-	// At this point the web page already downloaded.
-	// Time to process it.
-	if contentBuffer != nil {
-		book.CreateArchive = true
-		request := core.ProcessRequest{
-			DataDir:     h.DataDir,
-			Bookmark:    book,
-			Content:     contentBuffer,
-			ContentType: contentType,
+		if book.HTML == "" {
+			contentBuffer, contentType, _ = core.DownloadBookmark(book.URL)
+		} else {
+			contentType = "text/html; charset=UTF-8"
+			contentBuffer = bytes.NewBufferString(book.HTML)
 		}
 
-		var isFatalErr bool
-		book, isFatalErr, err = core.ProcessBookmark(request)
+		// At this point the web page already downloaded.
+		// Time to process it.
+		if contentBuffer != nil {
+			book.CreateArchive = true
+			request := core.ProcessRequest{
+				DataDir:     h.DataDir,
+				Bookmark:    book,
+				Content:     contentBuffer,
+				ContentType: contentType,
+			}
 
-		if tmp, ok := contentBuffer.(io.ReadCloser); ok {
-			tmp.Close()
+			var isFatalErr bool
+			book, isFatalErr, err = core.ProcessBookmark(request)
+
+			if tmp, ok := contentBuffer.(io.ReadCloser); ok {
+				tmp.Close()
+			}
+
+			if err != nil && isFatalErr {
+				fmt.Errorf("failed to process bookmark: %v", err)
+				return
+			}
 		}
 
-		if err != nil && isFatalErr {
-			panic(fmt.Errorf("failed to process bookmark: %v", err))
+		// Save bookmark to database
+		results, err := h.DB.SaveBookmarks(book)
+		if err != nil || len(results) == 0 {
+			fmt.Errorf("failed to save bookmark: %v", err)
+			return
 		}
-	}
-
-	// Save bookmark to database
-	results, err := h.DB.SaveBookmarks(book)
-	if err != nil || len(results) == 0 {
-		panic(fmt.Errorf("failed to save bookmark: %v", err))
-	}
-	book = results[0]
+	}()
 
 	// Return the new bookmark
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(&book)
-	checkError(err)
+	w.Write([]byte(`{"code":201}`))
 }
 
 // apiDeleteViaExtension is handler for DELETE /api/bookmark/ext
